@@ -5,6 +5,7 @@ import pathlib
 from dataclasses import dataclass
 
 import grpc
+from google.protobuf import descriptor
 
 from hades.generator.nanopb import NanoPBWrapper
 
@@ -20,7 +21,7 @@ class RPC:
     input_type: str
     output_type: str
 
-    def __init__(self, target):
+    def __init__(self, target: descriptor.MethodDescriptor):
         self.name = target.full_name
         self.symbol_name = target.full_name.replace(".", "_")
         self.id = hashlib.sha1(str.encode(self.name)).digest()
@@ -34,7 +35,7 @@ class Service:
     id: bytes
     rpcs: list[RPC]
 
-    def __init__(self, target):
+    def __init__(self, target: descriptor.ServiceDescriptor):
         self.name = target.full_name
         self.symbol_name = target.full_name.replace(".", "_")
         self.id = hashlib.sha1(str.encode(self.name)).digest()
@@ -50,7 +51,7 @@ class ProtoFile:
     include_files: set[str]
     services: list[Service]
 
-    def __init__(self, target):
+    def __init__(self, target: descriptor.FileDescriptor):
         self.name = target.name
         self.services = []
         self.include_files = set()
@@ -89,7 +90,7 @@ class Generator:
         for file in files:
             self._generate_file(file)
 
-    def _generate_file(self, proto):
+    def _generate_file(self, proto: ProtoFile):
 
         if len(proto.services) == 0:
             return  # No need for a header
@@ -133,7 +134,9 @@ class Generator:
                 file.write("};\n")
 
     @staticmethod
-    def _resolve_files(root_descriptor):
+    def _resolve_files(
+        root_descriptor: descriptor.FileDescriptor,
+    ) -> set[descriptor.FileDescriptor]:
         files = set()
 
         files.add(root_descriptor)
