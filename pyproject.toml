@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "hades"
+version = "0.1.0"
+description = ""
+authors = ["Alejandro Lobo <alobop@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+grpcio = "^1.60.1"
+grpcio-tools = "^1.60.1"
+nanopb = "^0.4.8"
+typer = "^0.9.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+hades = 'hades.apps.hades:app'
