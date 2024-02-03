@@ -1,11 +1,12 @@
-from hades.generator.nanopb import NanoPBWrapper
-
-import grpc
-import os
+import hashlib
 import itertools
+import os
 import pathlib
 from dataclasses import dataclass
-import hashlib
+
+import grpc
+
+from hades.generator.nanopb import NanoPBWrapper
 
 
 class GeneratorException(Exception):
@@ -23,12 +24,8 @@ class RPC:
         self.name = target.full_name
         self.symbol_name = target.full_name.replace(".", "_")
         self.id = hashlib.sha1(str.encode(self.name)).digest()
-        self.input_type = NanoPBWrapper.get_associated_symbol(
-            target.input_type.full_name
-        )
-        self.output_type = NanoPBWrapper.get_associated_symbol(
-            target.output_type.full_name
-        )
+        self.input_type = NanoPBWrapper.get_associated_symbol(target.input_type.full_name)
+        self.output_type = NanoPBWrapper.get_associated_symbol(target.output_type.full_name)
 
 
 @dataclass
@@ -39,6 +36,7 @@ class Service:
 
     def __init__(self, target):
         self.name = target.full_name
+        self.symbol_name = target.full_name.replace(".", "_")
         self.id = hashlib.sha1(str.encode(self.name)).digest()
         self.rpcs = []
 
@@ -77,9 +75,7 @@ class Generator:
     def generate(self):
         os.chdir(self.proto_directory)  # Proto doesn't work well with windows paths
         protos = grpc.protos(os.path.basename(self.target_path))
-        files = list(
-            map(lambda x: ProtoFile(x), Generator._resolve_files(protos.DESCRIPTOR))
-        )
+        files = list(map(lambda x: ProtoFile(x), Generator._resolve_files(protos.DESCRIPTOR)))
 
         # Generate NanoPB
         for file in files:
@@ -105,40 +101,36 @@ class Generator:
         )
 
         with open(file_name, "w") as file:
-            file.write('#include <hades.h>\n')
+            file.write("#include <hades.h>\n")
 
             for include in proto.include_files:
                 file.write(f'#include "{include}"\n')
 
             for service in proto.services:
                 for rpc in service.rpcs:
-                    file.write(
-                        f'void {rpc.symbol_name}(hades_rpc_t* rpc, void* context);\n'
-                    )
+                    file.write(f"void {rpc.symbol_name}(hades_rpc_t* rpc, void* context);\n")
 
                 file.write(
-                    'static __attribute__((unused)) hades_service_descriptor_t entry = {\n'
+                    "static const __attribute__((unused)) hades_service_descriptor_t "
+                    + f"hades_svc_{service.symbol_name} = {{\n"
                 )
                 file.write(
                     f'\t.id = {{.data={{{",".join(map(lambda x: f"{x:#02x}", service.id))}}}}},\n'
                 )
-                file.write("\t.rpcs = {")
+                file.write("\t.rpcs = {\n")
                 for rpc in service.rpcs:
-                    file.write('\t\t&(hades_rpc_descriptor_t){\n')
+                    file.write("\t\t&(hades_rpc_descriptor_t){\n")
                     file.write(
-                        f'\t\t\t.id = {{.data={{{",".join(map(lambda x: f"{x:#02x}", rpc.id))}}}}},\n'
+                        "\t\t\t.id = "
+                        + f'{{.data={{{",".join(map(lambda x: f"{x:#02x}", rpc.id))}}}}},\n'
                     )
-                    file.write(
-                        f'\t\t\t.input_msg_descriptor = {rpc.input_type}_fields,\n'
-                    )
-                    file.write(
-                        f'\t\t\t.output_msg_descriptor = {rpc.output_type}_fields,\n'
-                    )
-                    file.write(f'\t\t\t.handler = {rpc.symbol_name},\n')
-                    file.write('\t\t},\n')
-                file.write('\t\tNULL\n')
-                file.write('\t}\n')
-                file.write('};\n')
+                    file.write(f"\t\t\t.input_msg_descriptor = {rpc.input_type}_fields,\n")
+                    file.write(f"\t\t\t.output_msg_descriptor = {rpc.output_type}_fields,\n")
+                    file.write(f"\t\t\t.handler = {rpc.symbol_name},\n")
+                    file.write("\t\t},\n")
+                file.write("\t\tNULL\n")
+                file.write("\t}\n")
+                file.write("};\n")
 
     @staticmethod
     def _resolve_files(root_descriptor):
