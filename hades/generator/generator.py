@@ -2,6 +2,7 @@ import hashlib
 import itertools
 import os
 import pathlib
+import sys
 from dataclasses import dataclass
 
 import grpc
@@ -74,6 +75,7 @@ class Generator:
         self.proto_directory = os.path.dirname(self.target_path)
 
     def generate(self):
+        sys.path.insert(0, self.proto_director)  # Proto needs the files in the path
         os.chdir(self.proto_directory)  # Proto doesn't work well with windows paths
         protos = grpc.protos(os.path.basename(self.target_path))
         files = list(map(lambda x: ProtoFile(x), Generator._resolve_files(protos.DESCRIPTOR)))

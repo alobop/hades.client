@@ -11,6 +11,8 @@ grpcio = "^1.60.1"
 grpcio-tools = "^1.60.1"
 nanopb = "^0.4.8"
 typer = "^0.9.0"
+pyserial = "^3.5"
+attrs = "^23.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
