@@ -43,7 +43,6 @@ class HadesResponseHeader(ctypes.LittleEndianStructure, CTypeExtension):
 class HadesRequestVersion(ctypes.LittleEndianStructure, CTypeExtension):
     CMD_ID = 0
     _pack_ = 1
-    _fields_ = []
 
 
 class HadesResponseVersion(ctypes.LittleEndianStructure, CTypeExtension):
@@ -127,13 +126,13 @@ class HadesProtocol:
         return negotiated_size.negotiated_size
 
     def send_rpc(self, id: bytes, payload: bytes) -> bytes:
-        request = HadesRequestRPC(target=(ctypes.c_ubyte*20)(*id), size=len(payload))
+        request = HadesRequestRPC(target=(ctypes.c_ubyte * 20)(*id), size=len(payload))
         response = self._send_request(HadesRequestRPC.CMD_ID, request.pack() + payload)
 
         if len(response) < ctypes.sizeof(HadesResponseRPC):
             raise HadesProtocolException("Malformed response")
-        
-        return response[ctypes.sizeof(HadesResponseRPC):]
+
+        return response[ctypes.sizeof(HadesResponseRPC) :]
 
     def _send_request(self, command_id: int, request: bytes) -> bytes:
         header = HadesRequestHeader(

@@ -1,13 +1,12 @@
-import grpc
-import os
-import itertools
-import subprocess
-import nanopb
-import pathlib
-from dataclasses import dataclass
 import hashlib
+import itertools
+import os
 import sys
+import typing
 from functools import partial
+
+import grpc
+from google.protobuf import descriptor
 
 from hades.rpc.protocol import HadesProtocol, HadesProtocolVersion
 from hades.rpc.transports.transport import Transport
@@ -75,7 +74,7 @@ class Hades:
         setattr(current, message.name, message._concrete_class)
 
     @staticmethod
-    def _insert_method(root, protocol, method):
+    def _insert_method(root, protocol: HadesProtocol, method: descriptor.MethodDescriptor):
         package_hops = method.full_name.split(".")[:-1]
         current = root
 
@@ -99,7 +98,7 @@ class Hades:
         )
 
     @staticmethod
-    def _resolve_files(target):
+    def _resolve_files(target: descriptor.FileDescriptor) -> set[descriptor.FileDescriptor]:
         files = set()
 
         files.add(target)
@@ -110,7 +109,9 @@ class Hades:
         return files
 
     @staticmethod
-    def _send_rpc(protocol, id, input_type, output_type, **kwargs):
+    def _send_rpc(
+        protocol: HadesProtocol, id: bytes, input_type: type, output_type: type, **kwargs
+    ) -> typing.Any:
         request = input_type(**kwargs)
         raw_response = protocol.send_rpc(id, request.SerializeToString())
         parsed = output_type()
