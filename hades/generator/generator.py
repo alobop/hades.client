@@ -70,12 +70,12 @@ class ProtoFile:
 class Generator:
 
     def __init__(self, target_path: str, output_directory: str):
-        self.target_path = target_path
+        self.target_path = os.path.abspath(target_path)
         self.output_directory = output_directory
         self.proto_directory = os.path.dirname(self.target_path)
 
     def generate(self):
-        sys.path.insert(0, self.proto_director)  # Proto needs the files in the path
+        sys.path.insert(0, self.proto_directory)  # Proto needs the files in the path
         os.chdir(self.proto_directory)  # Proto doesn't work well with windows paths
         protos = grpc.protos(os.path.basename(self.target_path))
         files = list(map(lambda x: ProtoFile(x), Generator._resolve_files(protos.DESCRIPTOR)))

@@ -126,9 +126,18 @@ class HadesProtocol:
         self.negotiated_size = negotiated_size.negotiated_size
         return negotiated_size.negotiated_size
 
+    def send_rpc(self, id: bytes, payload: bytes) -> bytes:
+        request = HadesRequestRPC(target=(ctypes.c_ubyte*20)(*id), size=len(payload))
+        response = self._send_request(HadesRequestRPC.CMD_ID, request.pack() + payload)
+
+        if len(response) < ctypes.sizeof(HadesResponseRPC):
+            raise HadesProtocolException("Malformed response")
+        
+        return response[ctypes.sizeof(HadesResponseRPC):]
+
     def _send_request(self, command_id: int, request: bytes) -> bytes:
         header = HadesRequestHeader(
-            request=1, request_id=self._get_request_id(), command_id=command_id
+            request=1, request_id=self._get_request_id(), command=command_id
         )
         self.transport.send(header.pack() + request)
         response = self.transport.receive()
