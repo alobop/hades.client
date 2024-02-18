@@ -20,29 +20,29 @@ class Hades:
 
     HADES_VERSION = HadesProtocolVersion(major=0, minor=1, revision=5)
 
-    def __init__(self, connection: Transport, proto_path: str, proposed_size: int = 1024):
-        self.protocol = HadesProtocol(connection)
-        self.proposed_size = proposed_size
-
+    def __init__(self, proto_path: str):
         proto_path = os.path.abspath(proto_path)
         sys.path.insert(0, os.path.dirname(proto_path))  # Proto needs the files in the path
         os.chdir(os.path.dirname(proto_path))  # Proto doesn't work well with windows paths
         self.protos = grpc.protos(os.path.basename(proto_path))
 
-    def connect(self) -> object:
-        self.protocol.open()
+    def connect(self, connection: Transport, proposed_size: int = 1024) -> object:
+        protocol = HadesProtocol(connection)
+        protocol.open()
 
-        version = self.protocol.get_version()
+        version = protocol.get_version()
 
         if version.major != Hades.HADES_VERSION.major:
             raise HadesException("Endpoint version is not supported: {version}")
 
-        self.protocol.negotiate_size(self.proposed_size)
+        protocol.negotiate_size(proposed_size)
 
-        return self._generate_service_tree()
+        return self._generate_service_tree(protocol)
 
-    def _generate_service_tree(self) -> object:
+    def _generate_service_tree(self, protocol: HadesProtocol) -> object:
         root = Hades._create_node("root")
+
+        setattr(root, "close", partial(Hades._close_trasport, protocol=protocol))
 
         files = Hades._resolve_files(self.protos.DESCRIPTOR)
 
@@ -52,7 +52,7 @@ class Hades:
 
             for service in file.services_by_name.values():
                 for method in service.methods:
-                    Hades._insert_method(root, self.protocol, method)
+                    Hades._insert_method(root, protocol, method)
 
         return root
 
@@ -117,3 +117,7 @@ class Hades:
         parsed = output_type()
         parsed.ParseFromString(raw_response)
         return parsed
+
+    @staticmethod
+    def _close_trasport(protocol: HadesProtocol):
+        protocol.close()
