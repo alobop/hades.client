@@ -159,3 +159,16 @@ class HadesProtocol:
     def _get_request_id(self) -> int:
         self.request_id = (self.request_id + 1) & 0xFFFF
         return self.request_id
+
+
+class HadesEndpoint:
+    def __init__(self, transport: Transport):
+        self.protocol = HadesProtocol(transport=transport)
+
+    def __enter__(self):
+        self.protocol.open()
+        return self.protocol
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if self.protocol:
+            self.protocol.close()
