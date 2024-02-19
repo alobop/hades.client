@@ -1,12 +1,11 @@
 import importlib
 import re
-import sys
 from typing import Any
 
 import typer
 from typing_extensions import Annotated
 
-from hades.rpc.protocol import HadesEndpoint
+from hades.rpc.rpc import Hades
 
 app = typer.Typer()
 
@@ -31,31 +30,17 @@ def parse_connection(connection_string: str) -> Any:
 
 @app.callback()
 def endpoint(
-    connection: Annotated[
-        Any,
+    proto: Annotated[
+        str,
         typer.Option(
-            parser=parse_connection,
-            help="Connection string for the target endpoint",
-            envvar="HADES_CONNECTION",
+            help="Proto file that defines the service interface",
+            envvar="HADES_SERVICE_DEFINITION",
         ),
     ]
 ):
-    """
-    Interacts with a given endpoint
-    """
-    if not connection:
-        raise Exception("Connection was not given")
-
-    state["connection"] = connection
+    state["service_definition"] = proto
 
 
 @app.command()
-def query_version():
-    with HadesEndpoint(state["connection"]) as endpoint:
-        print(endpoint.get_version())
-
-
-@app.command()
-def query_message_size():
-    with HadesEndpoint(state["connection"]) as endpoint:
-        print(endpoint.negotiate_size(sys.maxsize))
+def list():
+    print(Hades(state["service_definition"]).describe(), end="")

@@ -4,6 +4,7 @@ import os
 import sys
 import typing
 from functools import partial
+from typing import Any, Dict
 
 import grpc
 from google.protobuf import descriptor
@@ -25,6 +26,53 @@ class Hades:
         sys.path.insert(0, os.path.dirname(proto_path))  # Proto needs the files in the path
         os.chdir(os.path.dirname(proto_path))  # Proto doesn't work well with windows paths
         self.protos = grpc.protos(os.path.basename(proto_path))
+
+    def describe(self) -> str:
+
+        tree: Dict[str, Any] = {}
+        files = Hades._resolve_files(self.protos.DESCRIPTOR)
+
+        for file in files:
+            for service in file.services_by_name.values():
+                if len(service.methods) == 0:
+                    continue
+
+                hops = service.full_name.split(".")
+                current = tree
+                for hop in hops:
+                    if hop not in current:
+                        current[hop] = {}
+
+                    current = current[hop]
+
+                for method in service.methods:
+                    current[
+                        f"{method.name}({method.input_type.name}) -> {method.output_type.name}"
+                    ] = {}
+
+        description = ""
+        queue = []
+        for node in tree.items():
+            queue.append((node[0], 0, node[1]))
+
+        while queue:
+            current_node = queue.pop(-1)
+            description += "\t" * current_node[1] + current_node[0]
+
+            children = current_node[2]
+            while len(children.keys()) == 1:
+                node = list(children.keys())[0]
+                if len(children[node].keys()) == 0:
+                    break
+                description += f".{node}"
+                children = children[node]
+
+            description += "\n"
+
+            for child in children.items():
+                queue.append((child[0], current_node[1] + 1, child[1]))
+
+        return description
 
     def connect(self, connection: Transport, proposed_size: int = 1024) -> object:
         protocol = HadesProtocol(connection)
