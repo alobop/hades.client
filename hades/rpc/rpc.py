@@ -90,7 +90,7 @@ class Hades:
     def _generate_service_tree(self, protocol: HadesProtocol) -> object:
         root = Hades._create_node("root")
 
-        setattr(root, "close", partial(Hades._close_trasport, protocol=protocol))
+        setattr(root, "close", partial(Hades._close_transport, protocol=protocol))
 
         files = Hades._resolve_files(self.protos.DESCRIPTOR)
 
@@ -167,5 +167,20 @@ class Hades:
         return parsed
 
     @staticmethod
-    def _close_trasport(protocol: HadesProtocol):
+    def _close_transport(protocol: HadesProtocol):
         protocol.close()
+
+
+class HadesRPCEndpoint:
+    def __init__(self, proto: str, transport: Transport):
+        self.hades = Hades(proto_path=proto)
+        self.transport = transport
+        self.server = None
+
+    def __enter__(self):
+        self.server = self.hades.connect(self.transport)
+        return self.server
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if self.server:
+            self.server.close()

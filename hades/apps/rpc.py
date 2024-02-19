@@ -1,11 +1,13 @@
 import importlib
+import json
 import re
 from typing import Any
 
 import typer
+from google.protobuf.json_format import MessageToJson
 from typing_extensions import Annotated
 
-from hades.rpc.rpc import Hades
+from hades.rpc.rpc import Hades, HadesRPCEndpoint
 
 app = typer.Typer()
 
@@ -29,7 +31,7 @@ def parse_connection(connection_string: str) -> Any:
 
 
 @app.callback()
-def endpoint(
+def rpc(
     proto: Annotated[
         str,
         typer.Option(
@@ -38,9 +40,39 @@ def endpoint(
         ),
     ]
 ):
+    """
+    Command set to invoke rpc methods on remote endpoint
+    """
     state["service_definition"] = proto
 
 
 @app.command()
 def list():
+    """
+    Lists the available services and methods
+    """
     print(Hades(state["service_definition"]).describe(), end="")
+
+
+@app.command()
+def exec(
+    connection: Annotated[
+        Any,
+        typer.Option(
+            parser=parse_connection,
+            help="Connection string for the target endpoint",
+            envvar="HADES_CONNECTION",
+        ),
+    ],
+    method: Annotated[str, typer.Argument(help="Method to invoke")],
+    args: Annotated[str, typer.Argument(help="Args in json format to pass the method")],
+):
+    with HadesRPCEndpoint(proto=state["service_definition"], transport=connection) as hades:
+        hops = method.split(".")
+        target_method = hades
+
+        for hop in hops:
+            target_method = getattr(target_method, hop)
+
+        data = json.loads(args)
+        print(MessageToJson(target_method(**data)))
