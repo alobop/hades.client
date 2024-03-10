@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import grpc
 from google.protobuf import descriptor
 
-from hades.generator.nanopb import NanoPBWrapper
+from hades_rpc.generator.nanopb import NanoPBWrapper
 
 
 class GeneratorException(Exception):

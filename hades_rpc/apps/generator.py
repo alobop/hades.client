@@ -1,7 +1,7 @@
 import typer
 from typing_extensions import Annotated
 
-from hades.generator.generator import Generator
+from hades_rpc.generator.generator import Generator
 
 app = typer.Typer()
 

@@ -1,8 +1,8 @@
 import typer
 
-from hades.apps.endpoint import app as endpoint_app
-from hades.apps.generator import app as generator_app
-from hades.apps.rpc import app as rpc_app
+from hades_rpc.apps.endpoint import app as endpoint_app
+from hades_rpc.apps.generator import app as generator_app
+from hades_rpc.apps.rpc import app as rpc_app
 
 app = typer.Typer()
 

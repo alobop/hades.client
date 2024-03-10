@@ -7,7 +7,7 @@ import typer
 from google.protobuf.json_format import MessageToJson
 from typing_extensions import Annotated
 
-from hades.rpc.rpc import Hades, HadesRPCEndpoint
+from hades_rpc.rpc.rpc import Hades, HadesRPCEndpoint
 
 app = typer.Typer()
 
@@ -24,7 +24,7 @@ def parse_connection(connection_string: str) -> Any:
     class_name = result.group(2)
     params = dict(item.split("=") for item in result.group(3).split(","))
 
-    module = importlib.import_module(f"hades.rpc.transports.{import_path}")
+    module = importlib.import_module(f"hades_rpc.rpc.transports.{import_path}")
     target_class = getattr(module, class_name)
 
     return target_class(**params)

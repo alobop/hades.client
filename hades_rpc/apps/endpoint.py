@@ -6,7 +6,7 @@ from typing import Any
 import typer
 from typing_extensions import Annotated
 
-from hades.rpc.protocol import HadesEndpoint
+from hades_rpc.rpc.protocol import HadesEndpoint
 
 app = typer.Typer()
 

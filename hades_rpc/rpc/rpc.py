@@ -9,8 +9,8 @@ from typing import Any, Dict
 import grpc
 from google.protobuf import descriptor
 
-from hades.rpc.protocol import HadesProtocol, HadesProtocolVersion
-from hades.rpc.transports.transport import Transport
+from hades_rpc.rpc.protocol import HadesProtocol, HadesProtocolVersion
+from hades_rpc.rpc.transports.transport import Transport
 
 
 class HadesException(Exception):

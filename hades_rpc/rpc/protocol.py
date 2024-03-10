@@ -2,7 +2,7 @@ import ctypes
 
 from attrs import define
 
-from hades.rpc.transports.transport import Transport
+from hades_rpc.rpc.transports.transport import Transport
 
 
 class HadesProtocolException(Exception):

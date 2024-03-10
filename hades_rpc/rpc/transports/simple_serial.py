@@ -3,7 +3,7 @@ from typing import Optional
 
 import serial
 
-from hades.rpc.transports.transport import Transport, TransportException
+from hades_rpc.rpc.transports.transport import Transport, TransportException
 
 
 class SimpleSerialHeader(ctypes.LittleEndianStructure):

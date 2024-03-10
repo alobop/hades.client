@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hades"
+name = "hades-rpc"
 version = "0.1.0"
 description = ""
 authors = ["Alejandro Lobo <alobop@outlook.com>"]
@@ -28,4 +28,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-hades = 'hades.apps.hades:app'
+hades = 'hades_rpc.apps.hades:app'
