@@ -98,6 +98,9 @@ class Hades:
             for message in file.message_types_by_name.values():
                 Hades._insert_message(root, message)
 
+            for enum in file.enum_types_by_name.values():
+                Hades._insert_enum(root, enum)
+
             for service in file.services_by_name.values():
                 for method in service.methods:
                     Hades._insert_method(root, protocol, method)
@@ -106,7 +109,7 @@ class Hades:
 
     @staticmethod
     def _create_node(name: str) -> object:
-        return type(name, (object,), {"name": name})
+        return type(name, (object,), {"__name": name})
 
     @staticmethod
     def _insert_message(root, message):
@@ -120,6 +123,24 @@ class Hades:
             current = getattr(current, package)
 
         setattr(current, message.name, message._concrete_class)
+
+    @staticmethod
+    def _insert_enum(root, enum):
+        package_hops = enum.full_name.split(".")[:-1]
+        current = root
+
+        for package in package_hops:
+            if not hasattr(current, package):
+                node = Hades._create_node(package)
+                setattr(current, package, node)
+            current = getattr(current, package)
+
+        enum_node = Hades._create_node(enum.name)
+        setattr(current, enum.name, enum_node)
+
+        for value in enum.values:
+            setattr(enum_node, value.name, value.number)
+
 
     @staticmethod
     def _insert_method(root, protocol: HadesProtocol, method: descriptor.MethodDescriptor):

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hades-rpc"
-version = "0.1.5"
+version = "0.1.6"
 description = ""
 authors = ["Alejandro Lobo <alobop@outlook.com>"]
 readme = "README.md"
